@@ -291,7 +291,25 @@ export default function Home() {
           </div>
           
           {/* Command Input */}
-          <CommandInput onSubmit={handleCommandSubmit} />
+          <CommandInput 
+            onSubmit={handleCommandSubmit}
+            onVoiceActivityChange={(isActive, transcript) => {
+              // When voice recognition becomes active, make hologram react
+              if (hologramRef.current) {
+                if (isActive) {
+                  // Update hologram when voice recognition starts
+                  hologramRef.current.updateSpeaking(false);
+                  // Show transcript in spoken text area if available
+                  if (transcript) {
+                    setSpokenText(`Listening: ${transcript}`);
+                  }
+                } else {
+                  // Reset hologram state when voice recognition ends
+                  setSpokenText("");
+                }
+              }
+            }}
+          />
         </div>
         
         {/* Right Sidebar - Details & Logs */}

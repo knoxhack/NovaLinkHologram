@@ -4,9 +4,10 @@ import { useVoiceCommands } from "@/hooks/useVoiceCommands";
 
 interface CommandInputProps {
   onSubmit: (command: string) => void;
+  onVoiceActivityChange?: (isActive: boolean, transcript?: string) => void;
 }
 
-export default function CommandInput({ onSubmit }: CommandInputProps) {
+export default function CommandInput({ onSubmit, onVoiceActivityChange }: CommandInputProps) {
   const [command, setCommand] = useState("");
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -44,7 +45,12 @@ export default function CommandInput({ onSubmit }: CommandInputProps) {
         inputRef.current.placeholder = "Type a command or speak using 'Nova, [command]'...";
       }
     }
-  }, [isListening]);
+    
+    // Notify parent component about voice activity changes
+    if (onVoiceActivityChange) {
+      onVoiceActivityChange(isListening, transcript);
+    }
+  }, [isListening, transcript, onVoiceActivityChange]);
   
   // Show toast notifications for errors
   useEffect(() => {
