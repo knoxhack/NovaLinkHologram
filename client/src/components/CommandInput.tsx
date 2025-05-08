@@ -48,7 +48,13 @@ export default function CommandInput({ onSubmit, onVoiceActivityChange }: Comman
     
     // Notify parent component about voice activity changes
     if (onVoiceActivityChange) {
-      onVoiceActivityChange(isListening, transcript);
+      // Format the transcript with a prefix to indicate it's a listening transcript
+      // This helps the Hologram component distinguish between spoken text and listening
+      const formattedTranscript = isListening && transcript 
+        ? `Listening: ${transcript}` 
+        : transcript;
+      
+      onVoiceActivityChange(isListening, formattedTranscript);
     }
   }, [isListening, transcript, onVoiceActivityChange]);
   

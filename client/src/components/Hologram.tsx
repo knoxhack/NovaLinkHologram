@@ -127,8 +127,9 @@ const Hologram = forwardRef<HologramRefHandle, HologramProps>(({
       if (isListeningTranscript) {
         // For listening transcript, just update state to show we are listening
         setIsSpeaking(false);
-        // Apply a subtle animation to show the hologram is actively listening
-        setPulseIntensity(1.2);
+        // We can use pulse() from useHologram to show the hologram is actively listening
+        // This function already exists and is properly defined
+        pulse();
       } else {
         // For regular spoken text, animate as if Nova is speaking
         setIsSpeaking(true);
@@ -148,7 +149,7 @@ const Hologram = forwardRef<HologramRefHandle, HologramProps>(({
       setIsSpeaking(false);
       updateSpeaking(false);
     }
-  }, [spokenText, updateSpeaking]);
+  }, [spokenText, updateSpeaking, pulse]);
   
   // Generate randomized but consistent binary data for stream
   const binaryData = useMemo(() => {
