@@ -63,16 +63,26 @@ export class DatabaseStorage implements IStorage {
   }
   
   async upsertUser(userData: UpsertUser): Promise<User> {
+    // Type-safe extraction of fields
+    const insertData = {
+      id: userData.id,
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      profileImageUrl: userData.profileImageUrl,
+      updatedAt: new Date(),
+    };
+    
     const [user] = await db
       .insert(users)
-      .values({
-        ...userData,
-        updatedAt: new Date(),
-      })
+      .values(insertData)
       .onConflictDoUpdate({
         target: users.id,
         set: {
-          ...userData,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
           updatedAt: new Date(),
         },
       })
