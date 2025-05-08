@@ -1,18 +1,20 @@
 import { 
-  users, type User, type InsertUser,
+  users, type User, type InsertUser, type UpsertUser,
   agentTypes, type AgentType, type InsertAgentType,
   agents, type Agent, type InsertAgent,
   messages, type Message, type InsertMessage,
   alerts, type Alert, type InsertAlert,
   commands, type Command, type InsertCommand,
-  AgentStatusEnum
+  AgentStatusEnum, type AgentStatus
 } from "@shared/schema";
 
+import { db } from './db';
+import { eq, and, SQL } from 'drizzle-orm';
+
 export interface IStorage {
-  // User operations
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  // User operations for Replit Auth
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
   
   // Agent type operations
   getAgentTypes(): Promise<AgentType[]>;
@@ -41,14 +43,142 @@ export interface IStorage {
   executeCommand(id: number): Promise<Command | undefined>;
 }
 
+// Database implementation using Drizzle ORM
+export class DatabaseStorage implements IStorage {
+  // User operations for Replit Auth
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+  
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    // This method is kept for interface compatibility but not used with Replit Auth
+    return undefined;
+  }
+  
+  async createUser(user: InsertUser): Promise<User> {
+    // This method is kept for interface compatibility but not used with Replit Auth
+    const [createdUser] = await db.insert(users).values(user).returning();
+    return createdUser;
+  }
+  
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...userData,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+  
+  // Agent type operations
+  async getAgentTypes(): Promise<AgentType[]> {
+    return await db.select().from(agentTypes);
+  }
+  
+  async getAgentType(id: number): Promise<AgentType | undefined> {
+    const [agentType] = await db.select().from(agentTypes).where(eq(agentTypes.id, id));
+    return agentType;
+  }
+  
+  async createAgentType(agentType: InsertAgentType): Promise<AgentType> {
+    const [createdAgentType] = await db.insert(agentTypes).values(agentType).returning();
+    return createdAgentType;
+  }
+  
+  // Agent operations
+  async getAgents(): Promise<Agent[]> {
+    return await db.select().from(agents);
+  }
+  
+  async getAgent(id: number): Promise<Agent | undefined> {
+    const [agent] = await db.select().from(agents).where(eq(agents.id, id));
+    return agent;
+  }
+  
+  async createAgent(agent: InsertAgent): Promise<Agent> {
+    const [createdAgent] = await db.insert(agents).values(agent).returning();
+    return createdAgent;
+  }
+  
+  async updateAgentStatus(id: number, status: string): Promise<Agent | undefined> {
+    const [updatedAgent] = await db
+      .update(agents)
+      .set({ status: status as AgentStatus })
+      .where(eq(agents.id, id))
+      .returning();
+    return updatedAgent;
+  }
+  
+  // Message operations
+  async getMessages(agentId: number): Promise<Message[]> {
+    return await db.select().from(messages).where(eq(messages.agentId, agentId));
+  }
+  
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const [createdMessage] = await db.insert(messages).values(message).returning();
+    return createdMessage;
+  }
+  
+  // Alert operations
+  async getAlerts(): Promise<Alert[]> {
+    return await db.select().from(alerts);
+  }
+  
+  async getAgentAlerts(agentId: number): Promise<Alert[]> {
+    return await db.select().from(alerts).where(eq(alerts.agentId, agentId));
+  }
+  
+  async createAlert(alert: InsertAlert): Promise<Alert> {
+    const [createdAlert] = await db.insert(alerts).values(alert).returning();
+    return createdAlert;
+  }
+  
+  async resolveAlert(id: number): Promise<Alert | undefined> {
+    const [updatedAlert] = await db
+      .update(alerts)
+      .set({ resolved: true })
+      .where(eq(alerts.id, id))
+      .returning();
+    return updatedAlert;
+  }
+  
+  // Command operations
+  async getCommands(agentId: number): Promise<Command[]> {
+    return await db.select().from(commands).where(eq(commands.agentId, agentId));
+  }
+  
+  async createCommand(command: InsertCommand): Promise<Command> {
+    const [createdCommand] = await db.insert(commands).values(command).returning();
+    return createdCommand;
+  }
+  
+  async executeCommand(id: number): Promise<Command | undefined> {
+    const [updatedCommand] = await db
+      .update(commands)
+      .set({ executed: true })
+      .where(eq(commands.id, id))
+      .returning();
+    return updatedCommand;
+  }
+}
+
 export class MemStorage implements IStorage {
-  private users: Map<number, User>;
+  private users: Map<string, User>;
   private agentTypes: Map<number, AgentType>;
   private agents: Map<number, Agent>;
   private messages: Map<number, Message>;
   private alerts: Map<number, Alert>;
   private commands: Map<number, Command>;
-  private currentUserId: number;
   private currentAgentTypeId: number;
   private currentAgentId: number;
   private currentMessageId: number;
@@ -62,7 +192,6 @@ export class MemStorage implements IStorage {
     this.messages = new Map();
     this.alerts = new Map();
     this.commands = new Map();
-    this.currentUserId = 1;
     this.currentAgentTypeId = 1;
     this.currentAgentId = 1;
     this.currentMessageId = 1;
@@ -82,20 +211,25 @@ export class MemStorage implements IStorage {
     this.seedAlerts();
   }
   
-  // User operations
-  async getUser(id: number): Promise<User | undefined> {
+  // User operations for Replit Auth
+  async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
   }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
+  
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const id = userData.id;
+    let user = this.users.get(id);
+    
+    if (user) {
+      user = { ...user, ...userData, updatedAt: new Date() };
+    } else {
+      user = { 
+        ...userData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      } as User;
+    }
+    
     this.users.set(id, user);
     return user;
   }
@@ -355,4 +489,5 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Use DatabaseStorage to enable database persistence
+export const storage = new DatabaseStorage();
