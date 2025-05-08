@@ -252,3 +252,117 @@
   box-shadow: 0 0 15px rgba(55, 114, 255, 0.2);
   transition: box-shadow 0.3s ease-in-out;
 }
+
+/* Glitch effect animation */
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+.animate-glitch {
+  animation: glitch 0.2s ease-in-out infinite;
+}
+
+/* Hologram circular scan animation */
+@keyframes circular-scan {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+    opacity: 0.1;
+  }
+}
+
+.circular-scan {
+  animation: circular-scan 10s linear infinite;
+}
+
+/* Data point floating animation */
+@keyframes data-float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-5px) translateX(2px);
+  }
+  50% {
+    transform: translateY(0) translateX(5px);
+  }
+  75% {
+    transform: translateY(5px) translateX(-2px);
+  }
+}
+
+.data-point {
+  animation: data-float 5s ease-in-out infinite;
+}
+
+/* Analysis grid animation */
+@keyframes grid-pulse {
+  0%, 100% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.analysis-grid {
+  animation: grid-pulse 3s ease-in-out infinite;
+}
+
+/* Terminal text typing animation */
+@keyframes typing {
+  from { 
+    width: 0;
+    border-right: 2px solid hsl(var(--primary));
+  }
+  to {
+    width: 100%;
+    border-right: 2px solid transparent;
+  }
+}
+
+.typing-animation {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typing 3s steps(40, end);
+}
+
+/* Alert flash animation */
+@keyframes alert-flash {
+  0%, 100% {
+    border-color: rgba(255, 0, 60, 0.3);
+    box-shadow: 0 0 10px rgba(255, 0, 60, 0.3);
+  }
+  50% {
+    border-color: rgba(255, 0, 60, 0.8);
+    box-shadow: 0 0 20px rgba(255, 0, 60, 0.6);
+  }
+}
+
+.alert-flash {
+  animation: alert-flash 1s ease-in-out infinite;
+}
