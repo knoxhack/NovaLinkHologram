@@ -1,5 +1,5 @@
-import { useAuth } from "@/hooks/useAuth";
-import { Navigate, useLocation } from "wouter";
+import { useAuth } from "../hooks/useAuth";
+import { useLocation } from "wouter";
 import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
@@ -24,7 +24,13 @@ export default function ProtectedRoute({
   }
 
   if (!isAuthenticated) {
-    return <Navigate to={`${redirect}?redirect=${encodeURIComponent(location)}`} />;
+    window.location.href = `${redirect}?redirect=${encodeURIComponent(location)}`;
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Redirecting to login...</p>
+      </div>
+    );
   }
 
   return <>{children}</>;

@@ -102,6 +102,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // API Routes
   
+  // Get authenticated user
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+  
   // Get all agent types
   app.get('/api/agent-types', async (req, res) => {
     try {
@@ -172,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Create a message
-  app.post('/api/messages', async (req, res) => {
+  app.post('/api/messages', isAuthenticated, async (req, res) => {
     try {
       const messageData = insertMessageSchema.parse(req.body);
       const message = await storage.createMessage(messageData);
@@ -227,7 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Create a command
-  app.post('/api/commands', async (req, res) => {
+  app.post('/api/commands', isAuthenticated, async (req, res) => {
     try {
       const commandData = insertCommandSchema.parse(req.body);
       const command = await storage.createCommand(commandData);
@@ -242,7 +254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Execute a command
-  app.patch('/api/commands/:id/execute', async (req, res) => {
+  app.patch('/api/commands/:id/execute', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const command = await storage.executeCommand(id);
