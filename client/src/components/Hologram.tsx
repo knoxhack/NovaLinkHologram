@@ -161,7 +161,7 @@ const Hologram = forwardRef<HologramRefHandle, HologramProps>(({
       {/* 2D Hologram Container */}
       <div 
         id="hologram-container" 
-        ref={hologramContainerRef} 
+        ref={hologramContainerRef}
         className="relative w-full h-full flex items-center justify-center"
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
