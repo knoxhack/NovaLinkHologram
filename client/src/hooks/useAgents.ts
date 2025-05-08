@@ -1,8 +1,14 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Agent, AgentType, Alert } from "@shared/schema";
+import { getQueryFn } from "@/lib/queryClient";
+import { useAuth } from "./useAuth";
 
 export function useAgents() {
   const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
+  
+  // Don't run these queries if user is not authenticated
+  const enabled = isAuthenticated;
   
   // Query for fetching agents
   const { 
@@ -13,7 +19,9 @@ export function useAgents() {
     refetch: refetchAgents
   } = useQuery<Agent[]>({
     queryKey: ['/api/agents'],
+    queryFn: getQueryFn({ on401: "throw" }),
     refetchInterval: 5000, // Refresh every 5 seconds
+    enabled,
   });
   
   // Query for fetching agent types
@@ -24,6 +32,8 @@ export function useAgents() {
     error: agentTypesError
   } = useQuery<AgentType[]>({
     queryKey: ['/api/agent-types'],
+    queryFn: getQueryFn({ on401: "throw" }),
+    enabled,
   });
   
   // Query for fetching alerts
@@ -35,7 +45,9 @@ export function useAgents() {
     refetch: refetchAlerts
   } = useQuery<Alert[]>({
     queryKey: ['/api/alerts'],
+    queryFn: getQueryFn({ on401: "throw" }),
     refetchInterval: 3000, // Refresh alerts more frequently
+    enabled,
   });
   
   // Combined loading state
