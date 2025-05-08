@@ -237,9 +237,14 @@
 @keyframes scanner {
   0% {
     transform: translateY(-100%);
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
   }
   100% {
     transform: translateY(1000%);
+    opacity: 0.5;
   }
 }
 
@@ -329,6 +334,42 @@
   }
   50% {
     opacity: 0.3;
+  }
+}
+
+/* Digital noise/interference effect */
+@keyframes digital-noise {
+  0%, 5%, 10%, 15%, 20%, 100% {
+    opacity: 0;
+  }
+  1%, 6%, 11%, 16% {
+    opacity: 0.3;
+  }
+  2%, 7%, 12%, 17% {
+    opacity: 0.1;
+  }
+}
+
+.digital-noise {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  animation: digital-noise 15s step-end infinite;
+}
+
+/* Power flicker animation */
+@keyframes power-flicker {
+  0%, 100% {
+    opacity: 1;
+  }
+  98% {
+    opacity: 1;
+  }
+  99% {
+    opacity: 0.8;
   }
 }
 

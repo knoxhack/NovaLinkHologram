@@ -45,10 +45,19 @@ export default function AuthPrompt({
       {/* Background grid with animation */}
       <div className="absolute inset-0 grid-bg opacity-20"></div>
       
+      {/* Digital noise effect */}
+      <div className="digital-noise"></div>
+      
+      {/* Power flicker effect */}
+      <div className="absolute inset-0 pointer-events-none" 
+        style={{animation: 'power-flicker 20s infinite', animationDelay: '10s'}}></div>
+      
       {/* Circular scan effects */}
       <div className="absolute top-1/2 left-1/2 w-[600px] h-[600px] border border-primary/5 rounded-full circular-scan opacity-10"></div>
       <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] border border-accent/5 rounded-full circular-scan opacity-10" 
         style={{animationDelay: '1s', animationDuration: '12s'}}></div>
+      <div className="absolute top-1/2 left-1/2 w-[200px] h-[200px] border border-secondary/5 rounded-full circular-scan opacity-10" 
+        style={{animationDelay: '0.5s', animationDuration: '8s'}}></div>
       
       {/* Floating data points */}
       <div className="absolute inset-0 pointer-events-none">
@@ -57,6 +66,8 @@ export default function AuthPrompt({
           style={{animationDelay: '1.5s'}}></div>
         <div className="absolute top-2/3 left-2/3 w-2 h-2 bg-accent/40 rounded-full data-point" 
           style={{animationDelay: '0.8s'}}></div>
+        <div className="absolute bottom-1/4 right-1/4 w-1.5 h-1.5 bg-primary/30 rounded-full data-point" 
+          style={{animationDelay: '2.2s'}}></div>
       </div>
       
       <div className={`relative transition-all duration-500 transform ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>

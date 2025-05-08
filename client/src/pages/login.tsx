@@ -98,6 +98,13 @@ export default function Login() {
       {/* Background grid with animation */}
       <div className="absolute inset-0 grid-bg opacity-20"></div>
       
+      {/* Digital noise overlay */}
+      <div className="digital-noise"></div>
+      
+      {/* Power flicker effect for whole page */}
+      <div className="absolute inset-0 pointer-events-none" 
+        style={{animation: 'power-flicker 15s infinite', animationDelay: '7s'}}></div>
+      
       {/* Scanning beam effect */}
       {scanningEffect && (
         <div className="absolute inset-0 pointer-events-none z-10">
