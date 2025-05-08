@@ -249,8 +249,12 @@
 
 /* Shadow glow effect for selected items */
 .shadow-glow {
-  box-shadow: 0 0 15px rgba(55, 114, 255, 0.2);
-  transition: box-shadow 0.3s ease-in-out;
+  box-shadow: 0 0 15px rgba(12, 255, 225, 0.3);
+  transition: all 0.3s ease-in-out;
+}
+
+.shadow-glow:hover {
+  box-shadow: 0 0 25px rgba(12, 255, 225, 0.5);
 }
 
 /* Glitch effect animation */
@@ -365,4 +369,39 @@
 
 .alert-flash {
   animation: alert-flash 1s ease-in-out infinite;
+}
+
+/* Login page hologram scan effect */
+.hologram-scan {
+  position: relative;
+  overflow: hidden;
+}
+
+.hologram-scan::before {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, 
+    rgba(12, 255, 225, 0) 0%, 
+    rgba(12, 255, 225, 0.8) 50%, 
+    rgba(12, 255, 225, 0) 100%);
+  z-index: 1;
+  opacity: 0.7;
+  animation: scan 4s ease-in-out infinite;
+}
+
+/* Secure access badge styles */
+.secure-access-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(12, 255, 225, 0.1);
+  border: 1px solid rgba(12, 255, 225, 0.3);
+  border-radius: 2rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.7rem;
+  color: hsl(var(--primary));
+  margin-top: 1rem;
 }
