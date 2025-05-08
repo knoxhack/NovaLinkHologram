@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
+import AuthStatus from './AuthStatus';
 
 interface HeaderProps {
   activeAgentCount: number;
@@ -141,18 +142,8 @@ export default function Header({ activeAgentCount, alertCount = 0 }: HeaderProps
           )}
         </div>
         
-        {/* User profile icon */}
-        <div className="w-9 h-9 rounded-full bg-card flex items-center justify-center border border-primary/40 hover:bg-card/80 transition-colors">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-5 w-5 text-primary" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-        </div>
+        {/* Auth Status Component */}
+        <AuthStatus />
       </div>
     </header>
   );
