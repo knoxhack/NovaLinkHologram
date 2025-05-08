@@ -37,7 +37,7 @@ async function seedDatabase() {
       name: "ChronoCore",
       projectId: "AstroPipeline",
       typeId: 1, // Time Manager
-      status: AgentStatusEnum.AWAITING_INPUT,
+      status: AgentStatusEnum.AWAITING_INPUT as unknown as AgentStatus,
       memory: 384,
       cpu: 12,
       uptime: 12240, // 3h 24m in seconds
@@ -47,7 +47,7 @@ async function seedDatabase() {
       name: "AstroPipeline",
       projectId: "StarfleetOps",
       typeId: 6, // Pipeline Manager
-      status: AgentStatusEnum.ACTIVE,
+      status: AgentStatusEnum.ACTIVE as unknown as AgentStatus,
       memory: 256,
       cpu: 8,
       uptime: 7200, // 2h in seconds
@@ -57,7 +57,7 @@ async function seedDatabase() {
       name: "DataSynth",
       projectId: "MetricAnalyzer",
       typeId: 2, // Data Processor
-      status: AgentStatusEnum.PROCESSING,
+      status: AgentStatusEnum.PROCESSING as unknown as AgentStatus,
       memory: 512,
       cpu: 24,
       uptime: 3600, // 1h in seconds
@@ -67,7 +67,7 @@ async function seedDatabase() {
       name: "VisionCore",
       projectId: "ImageClassifier",
       typeId: 3, // Vision System
-      status: AgentStatusEnum.ACTIVE,
+      status: AgentStatusEnum.ACTIVE as unknown as AgentStatus,
       memory: 768,
       cpu: 32,
       uptime: 1800, // 30m in seconds
@@ -77,7 +77,7 @@ async function seedDatabase() {
       name: "XenoAI",
       projectId: "AITrainer",
       typeId: 5, // AI Assistant
-      status: AgentStatusEnum.IDLE,
+      status: AgentStatusEnum.IDLE as unknown as AgentStatus,
       memory: 192,
       cpu: 4,
       uptime: 9000, // 2h 30m in seconds
@@ -87,7 +87,7 @@ async function seedDatabase() {
       name: "QuantumScheduler",
       projectId: "QuantumOps",
       typeId: 4, // Task Scheduler
-      status: AgentStatusEnum.STOPPED,
+      status: AgentStatusEnum.STOPPED as unknown as AgentStatus,
       memory: 0,
       cpu: 0,
       uptime: 0,
