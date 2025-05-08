@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useState, useMemo, forwardRef, useImperativeHandle } from "react";
 import { useHologram } from "@/hooks/useHologram";
 
 interface HologramProps {
@@ -6,8 +6,19 @@ interface HologramProps {
   spokenText?: string;
 }
 
-export default function Hologram({ showAlert = false, spokenText = "" }: HologramProps) {
-  const hologramRef = useRef<HTMLDivElement>(null);
+// Export the component types for ref usage
+export interface HologramRefHandle {
+  triggerAlert: () => void;
+  triggerAnalysis: () => void;
+  updateSpeaking: (speaking: boolean) => void;
+  glitch: () => void;
+}
+
+const Hologram = forwardRef<HologramRefHandle, HologramProps>(({ 
+  showAlert = false, 
+  spokenText = "" 
+}, ref) => {
+  const hologramContainerRef = useRef<HTMLDivElement>(null);
   const { 
     pulse, 
     triggerAlert,
@@ -19,6 +30,14 @@ export default function Hologram({ showAlert = false, spokenText = "" }: Hologra
     dataVisibility,
     speakingLevel
   } = useHologram();
+  
+  // Expose methods to parent components via ref
+  useImperativeHandle(ref, () => ({
+    triggerAlert,
+    triggerAnalysis,
+    updateSpeaking,
+    glitch
+  }));
   
   const [rotation, setRotation] = useState(0);
   const [hovering, setHovering] = useState(false);
@@ -142,7 +161,7 @@ export default function Hologram({ showAlert = false, spokenText = "" }: Hologra
       {/* 2D Hologram Container */}
       <div 
         id="hologram-container" 
-        ref={hologramRef} 
+        ref={hologramContainerRef} 
         className="relative w-full h-full flex items-center justify-center"
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
@@ -317,9 +336,8 @@ export default function Hologram({ showAlert = false, spokenText = "" }: Hologra
             style={{ transform: `rotate(${rotation * 1.2}deg)` }}
           >
             <div 
-              className="absolute w-2 h-2 rounded-full bg-primary top-0 left-1/2 transform -translate-x-1/2 animate-pulse-slow" 
+              className="absolute w-2 h-2 rounded-full top-0 left-1/2 transform -translate-x-1/2 animate-pulse-slow" 
               style={{ 
-                boxShadow: '0 0 5px #0CFFE1',
                 background: hologramMode === 'alert' ? '#FF2D55' : '#0CFFE1',
                 boxShadow: hologramMode === 'alert' ? '0 0 5px #FF2D55' : '0 0 5px #0CFFE1',
               }}
@@ -578,4 +596,6 @@ export default function Hologram({ showAlert = false, spokenText = "" }: Hologra
       </div>
     </div>
   );
-}
+});
+
+export default Hologram;

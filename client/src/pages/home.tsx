@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Header from "@/components/Header";
 import AgentCard from "@/components/AgentCard";
 import AgentDetails from "@/components/AgentDetails";
@@ -16,6 +16,8 @@ export default function Home() {
   const [spokenText, setSpokenText] = useState<string>("");
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [showAlert, setShowAlert] = useState<boolean>(false);
+  const [isAnalysisMode, setIsAnalysisMode] = useState<boolean>(false);
+  const hologramRef = useRef<any>(null);
   const { toast } = useToast();
   
   const { 
@@ -113,7 +115,44 @@ export default function Home() {
   const handleCommandSubmit = (command: string) => {
     if (!socket || socket.readyState !== WebSocket.OPEN || !selectedAgentId) return;
     
-    // Send the command to the server
+    // Advanced command handling with special commands
+    const lowerCommand = command.toLowerCase();
+    
+    // Check for special commands that trigger hologram modes
+    if (lowerCommand.includes("analyze") || lowerCommand.includes("diagnostic") || lowerCommand.includes("scan")) {
+      // Trigger analysis mode
+      setIsAnalysisMode(true);
+      const response = "Running complete system diagnostics on all active agents. Initial scan shows all systems operational. Analysis mode activated.";
+      setSpokenText(response);
+      
+      // Access the hologram's triggerAnalysis method through the ref
+      if (hologramRef.current && hologramRef.current.triggerAnalysis) {
+        hologramRef.current.triggerAnalysis();
+      }
+      
+      toast({
+        title: "Analysis Mode",
+        description: "System diagnostics initiated. Running comprehensive scan on all agents.",
+        className: "toast-accent",
+      });
+      
+      return;
+    }
+    
+    // Check for help command
+    if (lowerCommand === "help" || lowerCommand === "commands") {
+      const helpText = "Available commands: status, alert, deploy/schedule, analyze/scan, and help. You can also ask about specific agents by name.";
+      setSpokenText(helpText);
+      
+      toast({
+        title: "Help",
+        description: "Showing available commands in the hologram display",
+      });
+      
+      return;
+    }
+    
+    // Send the command to the server for regular commands
     socket.send(JSON.stringify({
       type: 'command',
       agentId: selectedAgentId,
@@ -128,6 +167,11 @@ export default function Home() {
       title: "Command Sent",
       description: `Command "${command}" sent to agent ${selectedAgent?.name || 'Unknown'}`,
     });
+    
+    // If analysis mode was active, turn it off
+    if (isAnalysisMode) {
+      setIsAnalysisMode(false);
+    }
   };
   
   if (isLoading) {
@@ -240,6 +284,7 @@ export default function Home() {
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 relative overflow-hidden">
             <Hologram 
+              ref={hologramRef}
               showAlert={showAlert}
               spokenText={spokenText}
             />
