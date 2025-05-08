@@ -95,7 +95,13 @@ async function seedDatabase() {
     }
   ];
   
-  const createdAgents = await db.insert(agents).values(agentData).returning();
+  // Map each agent data item to ensure status is properly typed
+  const typedAgentData = agentData.map(agent => ({
+    ...agent,
+    status: agent.status as AgentStatus
+  }));
+  
+  const createdAgents = await db.insert(agents).values(typedAgentData).returning();
   console.log(`Created ${createdAgents.length} agents`);
   
   // Seed messages

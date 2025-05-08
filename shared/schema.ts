@@ -55,7 +55,8 @@ export const AgentStatusEnum = {
 } as const;
 
 // Agent status type
-export type AgentStatus = typeof AgentStatusEnum[keyof typeof AgentStatusEnum];
+// Define as explicit string union type for better type safety
+export type AgentStatus = "active" | "idle" | "processing" | "awaiting_input" | "stopped" | "error";
 
 // Agent type table
 export const agentTypes = pgTable("agent_types", {

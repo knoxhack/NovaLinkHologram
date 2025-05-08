@@ -56,9 +56,15 @@ export class DatabaseStorage implements IStorage {
     return undefined;
   }
   
-  async createUser(user: InsertUser): Promise<User> {
+  async createUser(user: InsertUser & { id: string }): Promise<User> {
     // This method is kept for interface compatibility but not used with Replit Auth
-    const [createdUser] = await db.insert(users).values(user).returning();
+    const [createdUser] = await db.insert(users).values({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      profileImageUrl: user.profileImageUrl
+    }).returning();
     return createdUser;
   }
   
@@ -116,7 +122,17 @@ export class DatabaseStorage implements IStorage {
   }
   
   async createAgent(agent: InsertAgent): Promise<Agent> {
-    const [createdAgent] = await db.insert(agents).values(agent).returning();
+    // Ensure status is properly typed with AgentStatus
+    const [createdAgent] = await db.insert(agents).values({
+      name: agent.name,
+      projectId: agent.projectId,
+      typeId: agent.typeId,
+      status: agent.status as AgentStatus,
+      memory: agent.memory,
+      cpu: agent.cpu,
+      uptime: agent.uptime,
+      lastActive: agent.lastActive
+    }).returning();
     return createdAgent;
   }
   
@@ -271,7 +287,12 @@ export class MemStorage implements IStorage {
   
   async createAgent(insertAgent: InsertAgent): Promise<Agent> {
     const id = this.currentAgentId++;
-    const agent: Agent = { ...insertAgent, id };
+    // Ensure status is typed as AgentStatus
+    const agent: Agent = { 
+      ...insertAgent, 
+      id, 
+      status: insertAgent.status as AgentStatus 
+    };
     this.agents.set(id, agent);
     return agent;
   }
@@ -312,7 +333,12 @@ export class MemStorage implements IStorage {
   
   async createAlert(insertAlert: InsertAlert): Promise<Alert> {
     const id = this.currentAlertId++;
-    const alert: Alert = { ...insertAlert, id };
+    // Ensure resolved is always a boolean
+    const alert: Alert = { 
+      ...insertAlert, 
+      id,
+      resolved: insertAlert.resolved || false 
+    };
     this.alerts.set(id, alert);
     return alert;
   }
@@ -335,7 +361,12 @@ export class MemStorage implements IStorage {
   
   async createCommand(insertCommand: InsertCommand): Promise<Command> {
     const id = this.currentCommandId++;
-    const command: Command = { ...insertCommand, id };
+    // Ensure executed is always a boolean
+    const command: Command = { 
+      ...insertCommand, 
+      id,
+      executed: insertCommand.executed || false 
+    };
     this.commands.set(id, command);
     return command;
   }
