@@ -55,11 +55,43 @@ export function formatStatus(status: string): string {
     .join(' ');
 }
 
-// Create WebSocket connection based on environment
+// Create WebSocket connection based on environment with auto-reconnect
 export function createWebSocketConnection(): WebSocket {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const wsUrl = `${protocol}//${window.location.host}/ws`;
-  return new WebSocket(wsUrl);
+  
+  const socket = new WebSocket(wsUrl);
+  
+  // Setup auto-reconnect
+  socket.addEventListener('close', (event) => {
+    console.log('WebSocket connection closed. Attempting to reconnect...');
+    // Wait 2 seconds before attempting to reconnect
+    setTimeout(() => {
+      console.log('Reconnecting to WebSocket server...');
+      try {
+        // Create a new connection when the previous one closes
+        const newSocket = createWebSocketConnection();
+        
+        // Dispatch a custom event for the application to handle
+        window.dispatchEvent(new CustomEvent('websocket-reconnected', { 
+          detail: { socket: newSocket }
+        }));
+      } catch (error) {
+        console.error('Failed to reconnect to WebSocket server:', error);
+      }
+    }, 2000);
+  });
+  
+  // Log connection status
+  socket.addEventListener('open', () => {
+    console.log('Connected to WebSocket server');
+  });
+  
+  socket.addEventListener('error', (error) => {
+    console.error('WebSocket error:', error);
+  });
+  
+  return socket;
 }
 
 // Helper to get text-to-speech functionality

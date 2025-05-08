@@ -21,8 +21,9 @@ export function useVoiceCommands(
   useEffect(() => {
     if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
       // Use the correct version depending on browser support
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognitionInstance = new SpeechRecognition();
+      const SpeechRecognitionConstructor = 
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognitionConstructor();
       
       // Configure recognition
       recognitionInstance.continuous = false;
@@ -30,12 +31,12 @@ export function useVoiceCommands(
       recognitionInstance.lang = 'en-US';
       
       // Set up event handlers
-      recognitionInstance.onstart = () => {
+      recognitionInstance.onstart = (event: Event) => {
         setIsListening(true);
         setError(null);
       };
       
-      recognitionInstance.onresult = (event) => {
+      recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
         const current = event.resultIndex;
         const transcription = event.results[current][0].transcript;
         setTranscript(transcription);
@@ -44,12 +45,12 @@ export function useVoiceCommands(
         processCommand(transcription);
       };
       
-      recognitionInstance.onerror = (event) => {
+      recognitionInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
         setError(`Speech recognition error: ${event.error}`);
         setIsListening(false);
       };
       
-      recognitionInstance.onend = () => {
+      recognitionInstance.onend = (event: Event) => {
         setIsListening(false);
       };
       
@@ -127,10 +128,43 @@ export function useVoiceCommands(
   };
 }
 
+// Type definitions for SpeechRecognition API
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: {
+    [index: number]: {
+      [index: number]: {
+        transcript: string;
+        confidence: number;
+      };
+    };
+    length: number;
+  };
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  onstart: (event: Event) => void;
+  onend: (event: Event) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
 // Add type definition for browsers that don't have it
 declare global {
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
   }
 }
