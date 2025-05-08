@@ -121,17 +121,32 @@ const Hologram = forwardRef<HologramRefHandle, HologramProps>(({
   // Simulate speaking animation when spokenText changes
   useEffect(() => {
     if (spokenText) {
-      setIsSpeaking(true);
-      updateSpeaking(true, spokenText.length);
+      // Check if this is a live transcript from voice recognition
+      const isListeningTranscript = spokenText.startsWith('Listening:');
       
-      // Stop speaking after text would be read (rough approximation)
-      const duration = Math.min(spokenText.length * 50, 10000); // 50ms per character, max 10 seconds
-      const timer = setTimeout(() => {
+      if (isListeningTranscript) {
+        // For listening transcript, just update state to show we are listening
         setIsSpeaking(false);
-        updateSpeaking(false);
-      }, duration);
-      
-      return () => clearTimeout(timer);
+        // Apply a subtle animation to show the hologram is actively listening
+        setPulseIntensity(1.2);
+      } else {
+        // For regular spoken text, animate as if Nova is speaking
+        setIsSpeaking(true);
+        updateSpeaking(true, spokenText.length);
+        
+        // Stop speaking after text would be read (rough approximation)
+        const duration = Math.min(spokenText.length * 50, 10000); // 50ms per character, max 10 seconds
+        const timer = setTimeout(() => {
+          setIsSpeaking(false);
+          updateSpeaking(false);
+        }, duration);
+        
+        return () => clearTimeout(timer);
+      }
+    } else {
+      // No text, reset state
+      setIsSpeaking(false);
+      updateSpeaking(false);
     }
   }, [spokenText, updateSpeaking]);
   
