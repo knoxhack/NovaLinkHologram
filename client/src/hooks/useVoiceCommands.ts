@@ -3,7 +3,15 @@ import { speak } from "@/lib/utils";
 
 type CommandCallback = (command: string) => void;
 
-export function useVoiceCommands(onCommand: CommandCallback) {
+interface VoiceCommandOptions {
+  requireWakeWord?: boolean;
+  voiceFeedback?: boolean;
+}
+
+export function useVoiceCommands(
+  onCommand: CommandCallback, 
+  options: VoiceCommandOptions = { requireWakeWord: true, voiceFeedback: true }
+) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -61,20 +69,27 @@ export function useVoiceCommands(onCommand: CommandCallback) {
   const processCommand = useCallback((rawCommand: string) => {
     const command = rawCommand.toLowerCase().trim();
     
-    // Check if command starts with wake word "nova"
-    if (command.startsWith("nova") || command.startsWith("nova,")) {
-      const actualCommand = command.replace(/^nova,?\s*/i, "").trim();
+    // Check if command starts with wake word "nova" (if required)
+    const hasWakeWord = command.startsWith("nova") || command.startsWith("nova,");
+    
+    if (!options.requireWakeWord || hasWakeWord) {
+      // Extract actual command, removing wake word if present
+      const actualCommand = hasWakeWord 
+        ? command.replace(/^nova,?\s*/i, "").trim() 
+        : command;
       
-      // Acknowledge the command with voice feedback
-      speak(`Processing command: ${actualCommand}`);
+      // Provide voice feedback if enabled
+      if (options.voiceFeedback) {
+        speak(`Processing command: ${actualCommand}`);
+      }
       
       // Call the provided callback with the command
       onCommand(actualCommand);
     } else {
-      // If no wake word, just pass the command as is
-      onCommand(command);
+      // Wake word required but not provided
+      setError("Voice command must start with wake word 'Nova'");
     }
-  }, [onCommand]);
+  }, [onCommand, options.requireWakeWord, options.voiceFeedback]);
   
   // Start listening
   const startListening = useCallback(() => {
