@@ -1,7 +1,7 @@
 import { db } from './db';
 import { 
   agentTypes, agents, messages, alerts,
-  AgentStatusEnum,
+  AgentStatusEnum, type AgentStatus,
   type InsertAgentType, type InsertAgent, 
   type InsertMessage, type InsertAlert
 } from '@shared/schema';
@@ -37,7 +37,7 @@ async function seedDatabase() {
       name: "ChronoCore",
       projectId: "AstroPipeline",
       typeId: 1, // Time Manager
-      status: AgentStatusEnum.AWAITING_INPUT as unknown as AgentStatus,
+      status: AgentStatusEnum.AWAITING_INPUT,
       memory: 384,
       cpu: 12,
       uptime: 12240, // 3h 24m in seconds
