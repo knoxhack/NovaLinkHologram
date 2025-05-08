@@ -69,15 +69,21 @@ export default function AgentCard({
     if (inactive) return 'linear-gradient(145deg, rgba(26, 33, 56, 0.7), rgba(18, 24, 42, 0.7))';
     
     if (status === 'active') {
-      return `linear-gradient(145deg, rgba(26, 33, 56, 0.8), rgba(18, 24, 42, 0.8)), linear-gradient(90deg, ${agentType?.color || '#3772FF'}10, transparent)`;
+      return `linear-gradient(145deg, rgba(26, 33, 56, 0.8), rgba(18, 24, 42, 0.8)), 
+              linear-gradient(90deg, ${agentType?.color || '#3772FF'}15, transparent),
+              repeating-linear-gradient(110deg, transparent, transparent 5px, ${agentType?.color || '#3772FF'}05 5px, ${agentType?.color || '#3772FF'}05 7px)`;
     }
     
     if (status === 'processing') {
-      return `linear-gradient(145deg, rgba(26, 33, 56, 0.8), rgba(18, 24, 42, 0.8)), linear-gradient(90deg, ${agentType?.color || '#3772FF'}15, transparent)`;
+      return `linear-gradient(145deg, rgba(26, 33, 56, 0.8), rgba(18, 24, 42, 0.8)), 
+              linear-gradient(90deg, ${agentType?.color || '#3772FF'}20, transparent),
+              repeating-linear-gradient(110deg, transparent, transparent 5px, ${agentType?.color || '#3772FF'}08 5px, ${agentType?.color || '#3772FF'}08 7px)`;
     }
     
     if (status === 'awaiting_input') {
-      return `linear-gradient(145deg, rgba(26, 33, 56, 0.8), rgba(18, 24, 42, 0.8)), linear-gradient(90deg, rgba(255, 204, 0, 0.15), transparent)`;
+      return `linear-gradient(145deg, rgba(26, 33, 56, 0.8), rgba(18, 24, 42, 0.8)), 
+              linear-gradient(90deg, rgba(255, 204, 0, 0.15), transparent),
+              repeating-linear-gradient(110deg, transparent, transparent 5px, rgba(255, 204, 0, 0.05) 5px, rgba(255, 204, 0, 0.05) 7px)`;
     }
     
     return 'linear-gradient(145deg, rgba(26, 33, 56, 0.7), rgba(18, 24, 42, 0.7))';
@@ -112,19 +118,37 @@ export default function AgentCard({
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
-      {/* Alert indicator */}
+      {/* Cyberpunk-style decorative elements */}
+      <div className="absolute -right-1 bottom-1 text-[8px] opacity-30 font-mono transform rotate-90 pointer-events-none select-none">
+        {agent.id.toString().padStart(3, '0')}-{Math.floor(Math.random() * 999).toString().padStart(3, '0')}
+      </div>
+      
+      {/* Circuit-like lines in background */}
+      <div className="absolute bottom-0 right-0 w-16 h-16 pointer-events-none opacity-10">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 32H12M52 32H64M32 64V52M32 12V0" 
+                stroke={agentType?.color || '#3772FF'} strokeWidth="1" />
+          <path d="M20 44L24 48L28 44M36 44L40 48L44 44M12 32A20 20 0 0 1 32 12M52 32A20 20 0 0 1 32 52" 
+                stroke={agentType?.color || '#3772FF'} strokeWidth="1" />
+        </svg>
+      </div>
+      
+      {/* Alert indicator with enhanced animation */}
       {hasAlert && (
-        <div className="absolute -right-1 -top-1 w-5 h-5 bg-destructive rounded-full flex items-center justify-center alert-icon z-10">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-3 w-3 text-white" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-        </div>
+        <>
+          <div className="absolute -right-1 -top-1 w-5 h-5 bg-destructive rounded-full flex items-center justify-center alert-icon z-10">
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="h-3 w-3 text-white" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div className="absolute -right-1 -top-1 w-10 h-10 rounded-full border border-destructive animate-ping-slow opacity-30 pointer-events-none"></div>
+        </>
       )}
       
       {/* Processing animation - only show for processing status */}
@@ -136,7 +160,13 @@ export default function AgentCard({
       
       {/* Awaiting animation - only show for awaiting_input status */}
       {status === 'awaiting_input' && (
-        <div className="absolute top-0 right-0 w-2 h-2 bg-yellow-400 rounded-full mr-1 mt-1 animate-pulse"></div>
+        <>
+          <div className="absolute top-0 right-0 w-2 h-2 bg-yellow-400 rounded-full mr-1 mt-1 animate-pulse"></div>
+          <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+            <div className="absolute top-0 left-0 w-full h-full border border-yellow-400/20 rounded-lg"></div>
+            <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-r from-yellow-400/20 to-transparent animate-scan-x"></div>
+          </div>
+        </>
       )}
       
       <div className="relative z-1">
