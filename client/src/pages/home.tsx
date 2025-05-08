@@ -145,7 +145,10 @@ export default function Home() {
   return (
     <div className="flex flex-col h-screen overflow-hidden grid-bg">
       {/* Header */}
-      <Header activeAgentCount={activeAgentCount} />
+      <Header 
+        activeAgentCount={activeAgentCount} 
+        alertCount={alerts?.filter(a => !a.resolved).length || 0}
+      />
       
       {/* Main Content */}
       <main className="flex-1 flex overflow-hidden">

@@ -147,7 +147,7 @@ export default function CommandInput({ onSubmit }: CommandInputProps) {
             />
             <button 
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary"
-              onClick={handleSubmit}
+              onClick={() => handleSubmit()}
               disabled={!command.trim()}
             >
               <svg 

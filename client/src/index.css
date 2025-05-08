@@ -232,3 +232,23 @@
 .animate-breathe {
   animation: breathe 2s ease-in-out infinite;
 }
+
+/* Scanner animation for processing agents */
+@keyframes scanner {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(1000%);
+  }
+}
+
+.animate-scanner {
+  animation: scanner 2s linear infinite;
+}
+
+/* Shadow glow effect for selected items */
+.shadow-glow {
+  box-shadow: 0 0 15px rgba(55, 114, 255, 0.2);
+  transition: box-shadow 0.3s ease-in-out;
+}
