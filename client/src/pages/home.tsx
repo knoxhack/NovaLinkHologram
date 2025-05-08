@@ -5,10 +5,12 @@ import AgentDetails from "@/components/AgentDetails";
 import AgentLogs from "@/components/AgentLogs";
 import Hologram from "@/components/Hologram";
 import CommandInput from "@/components/CommandInput";
+import AuthPrompt from "@/components/AuthPrompt";
 import { useAgents } from "@/hooks/useAgents";
+import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Agent, AgentType, Alert } from "@shared/schema";
-import { createWebSocketConnection, speak } from "@/lib/utils";
+import { createWebSocketConnection, speak, isAuthenticated } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
@@ -41,9 +43,23 @@ export default function Home() {
     }
   }, [agents, selectedAgentId]);
   
-  // Setup WebSocket connection
+  // Get authentication status
+  const { isAuthenticated: userIsAuth, isLoading: authLoading, user } = useAuth();
+  
+  // Setup WebSocket connection when authenticated
   useEffect(() => {
+    // Only set up WebSocket if authenticated
+    if (!userIsAuth) {
+      console.log('Not creating WebSocket - user not authenticated');
+      return;
+    }
+    
     const ws = createWebSocketConnection();
+    
+    // If ws is null (user not authenticated), don't try to set up
+    if (!ws) {
+      return;
+    }
     
     ws.onopen = () => {
       console.log('Connected to WebSocket server');
@@ -84,14 +100,32 @@ export default function Home() {
       console.error('WebSocket error:', error);
     };
     
-    ws.onclose = () => {
-      console.log('Disconnected from WebSocket server');
+    ws.onclose = (event) => {
+      console.log(`WebSocket connection closed: ${event.code}`);
+      setSocket(null);
+      
+      // If it's an authentication issue, don't try to reconnect
+      if (event.code === 1008) {
+        console.log('WebSocket connection closed due to authentication issue');
+        // Potentially redirect to login or show a message
+      }
     };
     
-    return () => {
-      ws.close();
+    // Listen for WebSocket reconnection events
+    const handleReconnection = (e: any) => {
+      if (e.detail && e.detail.socket) {
+        console.log('Reconnected to WebSocket server');
+        setSocket(e.detail.socket);
+      }
     };
-  }, [refetchAgents, showAlert]);
+    
+    window.addEventListener('websocket-reconnected', handleReconnection);
+    
+    return () => {
+      if (ws) ws.close();
+      window.removeEventListener('websocket-reconnected', handleReconnection);
+    };
+  }, [refetchAgents, showAlert, userIsAuth]);
   
   // Find the selected agent
   const selectedAgent = agents?.find(agent => agent.id === selectedAgentId) || null;
@@ -174,7 +208,8 @@ export default function Home() {
     }
   };
   
-  if (isLoading) {
+  // Loading state
+  if (isLoading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-primary font-display text-2xl flex items-center">
@@ -186,6 +221,14 @@ export default function Home() {
     );
   }
   
+  // Note: Home is already wrapped in a ProtectedRoute in App.tsx
+  // which handles redirection to login if not authenticated
+  // This check is just a fallback for extra security
+  if (!userIsAuth && !authLoading) {
+    return null;
+  }
+  
+  // Main content - authenticated users only
   return (
     <div className="flex flex-col h-screen overflow-hidden grid-bg">
       {/* Header */}

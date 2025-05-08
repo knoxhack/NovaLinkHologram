@@ -55,8 +55,21 @@ export function formatStatus(status: string): string {
     .join(' ');
 }
 
+// Check if user is authenticated
+export function isAuthenticated(): boolean {
+  // Check for auth-related cookies
+  return document.cookie.includes('connect.sid=');
+}
+
 // Create WebSocket connection based on environment with auto-reconnect
-export function createWebSocketConnection(): WebSocket {
+export function createWebSocketConnection(): WebSocket | null {
+  // Only try to connect if the user is authenticated
+  if (!isAuthenticated()) {
+    console.log('Not creating WebSocket - user not authenticated');
+    // Return null to indicate no connection was made
+    return null;
+  }
+  
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const wsUrl = `${protocol}//${window.location.host}/ws`;
   
@@ -64,6 +77,13 @@ export function createWebSocketConnection(): WebSocket {
   
   // Setup auto-reconnect
   socket.addEventListener('close', (event) => {
+    // Close code 1008 means unauthorized - don't auto-reconnect in this case
+    if (event.code === 1008) {
+      console.log('WebSocket connection closed due to authentication issue. Please log in.');
+      // Potentially redirect to login page if this is a consistent issue
+      return;
+    }
+    
     console.log('WebSocket connection closed. Attempting to reconnect...');
     // Wait 2 seconds before attempting to reconnect
     setTimeout(() => {
@@ -72,10 +92,13 @@ export function createWebSocketConnection(): WebSocket {
         // Create a new connection when the previous one closes
         const newSocket = createWebSocketConnection();
         
-        // Dispatch a custom event for the application to handle
-        window.dispatchEvent(new CustomEvent('websocket-reconnected', { 
-          detail: { socket: newSocket }
-        }));
+        // Only dispatch reconnection event if we successfully reconnected
+        if (newSocket) {
+          // Dispatch a custom event for the application to handle
+          window.dispatchEvent(new CustomEvent('websocket-reconnected', { 
+            detail: { socket: newSocket }
+          }));
+        }
       } catch (error) {
         console.error('Failed to reconnect to WebSocket server:', error);
       }

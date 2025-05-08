@@ -1,59 +1,70 @@
 import { useAuth } from "../hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LogOut, User2 } from "lucide-react";
 
 export default function AuthStatus() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="flex items-center space-x-2">
-        <div className="h-8 w-8 rounded-full bg-gray-700 animate-pulse"></div>
-        <div className="h-4 w-24 bg-gray-700 rounded animate-pulse"></div>
+      <div className="flex items-center gap-2 p-2 text-muted-foreground animate-pulse">
+        <div className="w-8 h-8 rounded-full bg-muted" />
+        <div className="h-4 w-24 bg-muted rounded" />
       </div>
     );
   }
 
-  if (isAuthenticated && user) {
-    const initials = user.firstName && user.lastName 
-      ? `${user.firstName[0]}${user.lastName[0]}` 
-      : user.email 
-        ? user.email.substring(0, 2).toUpperCase()
-        : "U";
-
+  if (!isAuthenticated) {
     return (
-      <div className="flex items-center gap-4">
-        <div className="flex flex-col items-end">
-          <span className="text-sm font-medium text-accent-foreground">
-            {user.firstName || user.email?.split('@')[0] || 'User'}
-          </span>
-          <Button 
-            variant="link" 
-            size="sm" 
-            className="p-0 h-auto text-xs text-muted-foreground hover:text-accent-foreground"
-            onClick={() => window.location.href = '/api/logout'}
-          >
-            Sign out
-          </Button>
-        </div>
-        <Avatar className="border border-accent-foreground/20">
-          <AvatarImage src={user.profileImageUrl || undefined} alt="Profile" />
-          <AvatarFallback className="bg-accent text-accent-foreground">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
-      </div>
+      <Button
+        onClick={() => window.location.href = '/api/login'}
+        variant="outline"
+        size="sm"
+        className="text-xs h-8"
+      >
+        <User2 className="mr-2 w-3.5 h-3.5" />
+        Login
+      </Button>
     );
   }
 
   return (
-    <Button
-      variant="default"
-      size="sm"
-      className="bg-accent text-accent-foreground hover:bg-accent/80"
-      onClick={() => window.location.href = '/api/login'}
-    >
-      Sign In
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative rounded-full h-8 w-8 p-0 overflow-hidden border border-accent/30">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={user?.profileImageUrl || ""} alt="User avatar" />
+            <AvatarFallback className="bg-secondary/10 text-secondary">
+              {user?.firstName?.charAt(0) || user?.email?.charAt(0) || "U"}
+            </AvatarFallback>
+          </Avatar>
+          <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-background"></span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <div className="px-4 py-3 border-b border-accent/20">
+          <div className="text-sm font-medium text-foreground">
+            {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'Agent'}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1 truncate">
+            {user?.email || 'Authenticated User'}
+          </div>
+        </div>
+        <DropdownMenuItem 
+          className="text-destructive focus:text-destructive flex items-center cursor-pointer" 
+          onClick={() => window.location.href = '/api/logout'}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Logout</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
