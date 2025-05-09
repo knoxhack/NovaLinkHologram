@@ -26,8 +26,9 @@ export function useVoiceCommands(
       const recognitionInstance = new SpeechRecognitionConstructor();
       
       // Configure recognition
-      recognitionInstance.continuous = false;
-      recognitionInstance.interimResults = false;
+      recognitionInstance.continuous = true; // Enable continuous listening
+      recognitionInstance.interimResults = true; // Enable interim results for real-time feedback
+      recognitionInstance.maxAlternatives = 1; // Only need one alternative
       recognitionInstance.lang = 'en-US';
       
       // Set up event handlers
@@ -39,14 +40,40 @@ export function useVoiceCommands(
       recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
         const current = event.resultIndex;
         const transcription = event.results[current][0].transcript;
+        
+        // Update the transcript state for UI feedback
         setTranscript(transcription);
         
-        // Process command
-        processCommand(transcription);
+        // Only process final results, not interim ones
+        if (event.results[current].isFinal) {
+          // Process command when the user has finished speaking
+          processCommand(transcription);
+          
+          // Restart recognition after processing the command
+          // This ensures continuous listening works properly
+          if (recognitionInstance.continuous) {
+            setTimeout(() => {
+              try {
+                recognitionInstance.stop();
+              } catch (e) {
+                // Ignore errors when stopping
+              }
+            }, 1000);
+          }
+        }
       };
       
       recognitionInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
-        setError(`Speech recognition error: ${event.error}`);
+        // Only set certain errors - ignore no-speech errors which are common
+        if (event.error !== 'no-speech') {
+          if (event.error === 'not-allowed') {
+            setError('Microphone access denied. Please enable microphone permissions.');
+          } else if (event.error === 'network') {
+            setError('Network error occurred. Check your connection.');
+          } else {
+            setError(`Speech recognition error: ${event.error}`);
+          }
+        }
         setIsListening(false);
       };
       
@@ -81,7 +108,13 @@ export function useVoiceCommands(
       
       // Provide voice feedback if enabled
       if (options.voiceFeedback) {
-        speak(`Processing command: ${actualCommand}`);
+        speak(`Processing command: ${actualCommand}`, {
+          rate: 1.1,  // Slightly faster rate for acknowledgment
+          onEnd: () => {
+            // When done acknowledging, we're ready for the next interaction
+            console.log('Voice feedback completed');
+          }
+        });
       }
       
       // Call the provided callback with the command
@@ -137,6 +170,7 @@ interface SpeechRecognitionEvent extends Event {
         transcript: string;
         confidence: number;
       };
+      isFinal?: boolean;
     };
     length: number;
   };

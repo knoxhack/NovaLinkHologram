@@ -178,18 +178,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             timestamp: new Date()
           });
           
-          // Send a voice notification to the client
-          wss.clients.forEach(client => {
-            if (client.readyState === WebSocket.OPEN && (client as any).authenticated) {
-              const voiceData = {
-                type: 'voice',
-                data: {
-                  text: responseContent,
-                  agentId
-                }
-              };
-              client.send(JSON.stringify(voiceData));
-            }
+          // Send a voice notification to the client using the helper function
+          sendVoiceResponse(wss, {
+            text: responseContent,
+            agentId
           });
           
           // Broadcast the updated data to all connected clients
@@ -441,10 +433,39 @@ async function sendInitialData(ws: WebSocket) {
       };
       
       ws.send(JSON.stringify(initialData));
+      
+      // After a short delay, send a welcome message via the voice channel
+      setTimeout(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          // Send a welcome voice message with no specific agent ID (system message)
+          const welcomeData = {
+            type: 'voice',
+            data: {
+              text: "NovaLink connection established. All systems operational.",
+              agentId: null
+            }
+          };
+          
+          ws.send(JSON.stringify(welcomeData));
+        }
+      }, 1000);
     } catch (error) {
       console.error('Error sending initial data:', error);
     }
   }
+}
+
+// Helper function to send voice responses to clients
+function sendVoiceResponse(wss: WebSocketServer, responseData: { text: string, agentId: number }) {
+  wss.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN && (client as any).authenticated) {
+      const voiceData = {
+        type: 'voice',
+        data: responseData
+      };
+      client.send(JSON.stringify(voiceData));
+    }
+  });
 }
 
 // Helper function to broadcast updates to all connected clients
