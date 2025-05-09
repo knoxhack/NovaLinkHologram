@@ -1,6 +1,134 @@
-node_modules
-dist
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+.output/
+.next/
+out/
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env*.local
+
+# IDE and editor files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 .DS_Store
-server/public
-vite.config.ts.*
+*.sublime-workspace
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+.coverage
+.eslintcache
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+
+# Runtime data
+.cache/
+.temp/
+.tmp/
+tmp/
+temp/
+
+# Certificate and private keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.cert
+*.crt
+
+# OS specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Compiled artifacts
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.pyc
+*.pyo
+__pycache__/
+
+# Deployment specific
+.vercel
+.netlify
+.serverless/
+
+# Replit specific
+.replit
+.breakpoints
+.upm/
+.config/
+
+# Personal files
+**/secret/
+**/private/
+*personal*
+
+# Large files and media (if not needed in repo)
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.mp3
+*.wav
+*.zip
 *.tar.gz
+*.rar
+*.7z
+*.iso
+
+# API keys and credentials
+*_key.json
+*credential*.json
+*secret*.json
+*auth*.json
+*token*.json
+
+# Security/Access tokens
+*.token
+*secret*
+
+# PostgreSQL dumps
+*.dump
+*.sql.gz
+*.bak
+
+# Docker files (if not part of project)
+# Uncomment if needed
+# Dockerfile
+# docker-compose.yml
+# .dockerignore
