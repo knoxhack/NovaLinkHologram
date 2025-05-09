@@ -18,7 +18,8 @@ export interface HologramRefHandle {
 
 const Hologram = forwardRef<HologramRefHandle, HologramProps>(({ 
   showAlert = false, 
-  spokenText = "" 
+  spokenText = "",
+  voiceCommandActive = false
 }, ref) => {
   const hologramContainerRef = useRef<HTMLDivElement>(null);
   const { 
@@ -26,11 +27,13 @@ const Hologram = forwardRef<HologramRefHandle, HologramProps>(({
     triggerAlert,
     triggerAnalysis,
     updateSpeaking,
+    updateVoiceRecognitionState,
     glitch,
     glitchIntensity,
     hologramMode,
     dataVisibility,
-    speakingLevel
+    speakingLevel,
+    voiceRecognitionActive
   } = useHologram();
   
   // Expose methods to parent components via ref
@@ -38,6 +41,7 @@ const Hologram = forwardRef<HologramRefHandle, HologramProps>(({
     triggerAlert,
     triggerAnalysis,
     updateSpeaking,
+    updateVoiceRecognitionState,
     glitch
   }));
   
@@ -62,6 +66,11 @@ const Hologram = forwardRef<HologramRefHandle, HologramProps>(({
       triggerAlert();
     }
   }, [showAlert, triggerAlert]);
+  
+  // Update hologram state when voice command is active
+  useEffect(() => {
+    updateVoiceRecognitionState(voiceCommandActive);
+  }, [voiceCommandActive, updateVoiceRecognitionState]);
   
   // Generate random data points for the hologram visualization in 3D space
   useEffect(() => {
@@ -238,12 +247,20 @@ const Hologram = forwardRef<HologramRefHandle, HologramProps>(({
         <div className="relative w-72 h-72 flex items-center justify-center">
           {/* Outer rings */}
           <div 
-            className={`absolute w-72 h-72 rounded-full border-4 border-primary/30 animate-pulse-slow ${hovering ? 'scale-110' : ''} ${hologramMode === 'alert' ? 'alert-flash' : ''}`}
+            className={`absolute w-72 h-72 rounded-full border-4 border-primary/30 animate-pulse-slow ${hovering ? 'scale-110' : ''} ${hologramMode === 'alert' ? 'alert-flash' : ''} ${hologramMode === 'listening' ? 'listening-pulse' : ''}`}
             style={{ 
               transform: `rotate(${rotation}deg)`,
               transition: 'all 0.3s ease-out',
-              borderColor: hologramMode === 'alert' ? 'rgba(255, 0, 60, 0.5)' : '',
-              boxShadow: hologramMode === 'alert' ? '0 0 15px rgba(255, 0, 60, 0.3)' : '',
+              borderColor: hologramMode === 'alert' 
+                ? 'rgba(255, 0, 60, 0.5)' 
+                : hologramMode === 'listening' 
+                  ? 'rgba(55, 114, 255, 0.6)' 
+                  : '',
+              boxShadow: hologramMode === 'alert' 
+                ? '0 0 15px rgba(255, 0, 60, 0.3)' 
+                : hologramMode === 'listening' 
+                  ? '0 0 15px rgba(55, 114, 255, 0.4)' 
+                  : '',
               opacity: hologramMode === 'analysis' ? 0.5 : 1
             }}
           ></div>
@@ -252,9 +269,17 @@ const Hologram = forwardRef<HologramRefHandle, HologramProps>(({
             style={{ 
               transform: `rotate(${-rotation * 0.5}deg)`, 
               animationDelay: '300ms',
-              opacity: hologramMode === 'analysis' ? 0.5 : 1
+              opacity: hologramMode === 'analysis' ? 0.5 : 1,
+              borderColor: hologramMode === 'listening' ? 'rgba(55, 114, 255, 0.4)' : ''
             }}
           ></div>
+          
+          {/* Voice recognition indicator - only visible in listening mode */}
+          {hologramMode === 'listening' && (
+            <div className="absolute w-80 h-80 rounded-full border border-accent/30 animate-ping-slow"
+                 style={{ borderWidth: '1px', opacity: 0.6 }}
+            ></div>
+          )}
           
           {/* Inner hologram cylinder */}
           <div 

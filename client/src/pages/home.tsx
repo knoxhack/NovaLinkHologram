@@ -19,6 +19,7 @@ export default function Home() {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [isAnalysisMode, setIsAnalysisMode] = useState<boolean>(false);
+  const [voiceCommandActive, setVoiceCommandActive] = useState<boolean>(false);
   const hologramRef = useRef<any>(null);
   const { toast } = useToast();
   
@@ -390,6 +391,7 @@ export default function Home() {
               ref={hologramRef}
               showAlert={showAlert}
               spokenText={spokenText}
+              voiceCommandActive={voiceCommandActive}
             />
           </div>
           

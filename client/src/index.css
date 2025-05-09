@@ -412,6 +412,22 @@
   animation: alert-flash 1s ease-in-out infinite;
 }
 
+/* Listening mode animation */
+@keyframes listening-pulse {
+  0%, 100% { 
+    border-color: rgba(55, 114, 255, 0.4);
+    box-shadow: 0 0 15px rgba(55, 114, 255, 0.4); 
+  }
+  50% { 
+    border-color: rgba(55, 114, 255, 0.7);
+    box-shadow: 0 0 25px rgba(55, 114, 255, 0.6); 
+  }
+}
+
+.listening-pulse {
+  animation: listening-pulse 1.5s ease-in-out infinite;
+}
+
 /* Ping animation for alert indicators */
 @keyframes ping-slow {
   0% {
