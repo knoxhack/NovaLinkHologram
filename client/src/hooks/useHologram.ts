@@ -3,21 +3,23 @@ import { useState, useEffect, useCallback } from "react";
 export interface HologramState {
   rotationSpeed: number;
   pulseIntensity: number;
-  hologramMode: 'normal' | 'alert' | 'passive' | 'analysis';
+  hologramMode: 'normal' | 'alert' | 'passive' | 'analysis' | 'listening';
   speakingLevel: number;
   glitchIntensity: number;
   dataVisibility: number;
+  voiceRecognitionActive: boolean;
 }
 
 export function useHologram() {
   const [rotationSpeed, setRotationSpeed] = useState(0.3);
   const [pulseIntensity, setPulseIntensity] = useState(1.0);
-  const [hologramMode, setHologramMode] = useState<'normal' | 'alert' | 'passive' | 'analysis'>('normal');
+  const [hologramMode, setHologramMode] = useState<'normal' | 'alert' | 'passive' | 'analysis' | 'listening'>('normal');
   const [speakingLevel, setSpeakingLevel] = useState(0);
   const [glitchIntensity, setGlitchIntensity] = useState(0);
   const [dataVisibility, setDataVisibility] = useState(0.8);
+  const [voiceRecognitionActive, setVoiceRecognitionActive] = useState(false);
   
-  // Optional: Adjust hologram properties based on window size or other conditions
+  // Adjust hologram properties based on window size
   useEffect(() => {
     function handleResize() {
       // Adjust rotation speed based on window width
@@ -94,6 +96,34 @@ export function useHologram() {
     }, 300 + Math.random() * 700);
   }, []);
   
+  // Function to set hologram to listening mode
+  const setListeningMode = useCallback((isListening: boolean) => {
+    if (isListening) {
+      setHologramMode('listening');
+      setRotationSpeed(0.4); // Slightly faster rotation while listening
+      setPulseIntensity(1.3); // More intense pulse
+      setDataVisibility(0.9); // More visible data points
+    } else if (hologramMode === 'listening') {
+      // Only reset if we're in listening mode (don't override alert, etc.)
+      setHologramMode('normal');
+      setRotationSpeed(0.3);
+      setPulseIntensity(1.0);
+      setDataVisibility(0.8);
+    }
+  }, [hologramMode]);
+  
+  // Function to update voice recognition state
+  const updateVoiceRecognitionState = useCallback((isActive: boolean) => {
+    setVoiceRecognitionActive(isActive);
+    setListeningMode(isActive);
+    
+    if (isActive) {
+      // Visual effect for starting voice recognition
+      glitch();
+      pulse();
+    }
+  }, [glitch, pulse, setListeningMode]);
+  
   // Occasionally trigger glitches for cyberpunk feel
   useEffect(() => {
     const glitchInterval = setInterval(() => {
@@ -112,10 +142,13 @@ export function useHologram() {
     speakingLevel,
     glitchIntensity,
     dataVisibility,
+    voiceRecognitionActive,
     pulse,
     triggerAlert,
     triggerAnalysis,
     updateSpeaking,
+    setListeningMode,
+    updateVoiceRecognitionState,
     glitch,
     state: {
       rotationSpeed,
@@ -123,7 +156,8 @@ export function useHologram() {
       hologramMode,
       speakingLevel,
       glitchIntensity,
-      dataVisibility
+      dataVisibility,
+      voiceRecognitionActive
     } as HologramState
   };
 }

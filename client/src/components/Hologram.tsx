@@ -4,6 +4,7 @@ import { useHologram } from "@/hooks/useHologram";
 interface HologramProps {
   showAlert?: boolean;
   spokenText?: string;
+  voiceCommandActive?: boolean;
 }
 
 // Export the component types for ref usage
@@ -11,6 +12,7 @@ export interface HologramRefHandle {
   triggerAlert: () => void;
   triggerAnalysis: () => void;
   updateSpeaking: (speaking: boolean) => void;
+  updateVoiceRecognitionState: (isActive: boolean) => void;
   glitch: () => void;
 }
 
