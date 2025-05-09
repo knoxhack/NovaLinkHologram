@@ -399,6 +399,9 @@ export default function Home() {
           <CommandInput 
             onSubmit={handleCommandSubmit}
             onVoiceActivityChange={(isActive, transcript) => {
+              // Update voice command active state to control hologram listening mode
+              setVoiceCommandActive(isActive);
+              
               // When voice recognition becomes active, make hologram react
               if (hologramRef.current) {
                 if (isActive) {
@@ -406,7 +409,7 @@ export default function Home() {
                   hologramRef.current.updateSpeaking(false);
                   // Show transcript in spoken text area if available
                   if (transcript) {
-                    setSpokenText(`Listening: ${transcript}`);
+                    setSpokenText(transcript);
                   }
                 } else {
                   // Reset hologram state when voice recognition ends
