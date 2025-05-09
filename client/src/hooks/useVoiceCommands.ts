@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { speak } from "@/lib/utils";
 
 type CommandCallback = (command: string) => void;
@@ -16,6 +16,7 @@ export function useVoiceCommands(
   const [transcript, setTranscript] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const manuallyStoppedRef = useRef(false);
   
   // Initialize speech recognition
   useEffect(() => {
@@ -44,8 +45,11 @@ export function useVoiceCommands(
         // Update the transcript state for UI feedback
         setTranscript(transcription);
         
-        // Only process final results, not interim ones
-        if (event.results[current].isFinal) {
+        // Check if this is a final result (not interim)
+        const isFinal = !recognitionInstance.interimResults || 
+                       current === event.results.length - 1;
+        
+        if (isFinal) {
           // Process command when the user has finished speaking
           processCommand(transcription);
           
@@ -55,6 +59,12 @@ export function useVoiceCommands(
             setTimeout(() => {
               try {
                 recognitionInstance.stop();
+                // Auto-restart after brief pause
+                setTimeout(() => {
+                  if (recognition) {
+                    recognition.start();
+                  }
+                }, 300);
               } catch (e) {
                 // Ignore errors when stopping
               }
@@ -79,6 +89,23 @@ export function useVoiceCommands(
       
       recognitionInstance.onend = (event: Event) => {
         setIsListening(false);
+        
+        // Auto-restart for continuous mode, but not if manually stopped
+        if (recognitionInstance.continuous && !manuallyStoppedRef.current) {
+          try {
+            setTimeout(() => {
+              if (recognition) {
+                recognition.start();
+                setIsListening(true);
+              }
+            }, 500);
+          } catch (e) {
+            console.error("Error restarting speech recognition:", e);
+          }
+        }
+        
+        // Reset manual stop flag
+        manuallyStoppedRef.current = false;
       };
       
       setRecognition(recognitionInstance);
@@ -141,6 +168,8 @@ export function useVoiceCommands(
   // Stop listening
   const stopListening = useCallback(() => {
     if (recognition && isListening) {
+      // Set the flag to prevent auto-restart
+      manuallyStoppedRef.current = true;
       recognition.stop();
     }
   }, [recognition, isListening]);
