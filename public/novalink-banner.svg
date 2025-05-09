@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="300" viewBox="0 0 1200 300">
+  <defs>
+    <linearGradient id="cyberpunkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0CFFE1;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#3772FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF45E9;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="hologramBase" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0CFFE1;stop-opacity:0.7" />
+      <stop offset="100%" style="stop-color:#0CFFE1;stop-opacity:0.1" />
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feComponentTransfer in="blur" result="glow">
+        <feFuncR type="linear" slope="3" intercept="0" />
+        <feFuncG type="linear" slope="3" intercept="0" />
+        <feFuncB type="linear" slope="3" intercept="0" />
+        <feFuncA type="linear" slope="1" intercept="0" />
+      </feComponentTransfer>
+      <feComposite in="SourceGraphic" in2="glow" operator="over" />
+    </filter>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#3772FF" stroke-width="0.5" stroke-opacity="0.2"/>
+    </pattern>
+    <clipPath id="mainContentClip">
+      <rect x="0" y="0" width="1200" height="300" rx="10" ry="10"/>
+    </clipPath>
+  </defs>
+  
+  <!-- Background -->
+  <rect x="0" y="0" width="1200" height="300" fill="#1A2138" clip-path="url(#mainContentClip)"/>
+  <rect x="0" y="0" width="1200" height="300" fill="url(#grid)" clip-path="url(#mainContentClip)"/>
+  
+  <!-- Decorative Elements -->
+  <circle cx="600" cy="150" r="120" fill="none" stroke="url(#cyberpunkGradient)" stroke-width="2" stroke-opacity="0.3"/>
+  <circle cx="600" cy="150" r="110" fill="none" stroke="url(#cyberpunkGradient)" stroke-width="1.5" stroke-opacity="0.4">
+    <animateTransform attributeName="transform" 
+                      attributeType="XML" 
+                      type="rotate"
+                      from="0 600 150" 
+                      to="360 600 150" 
+                      dur="30s" 
+                      repeatCount="indefinite"/>
+  </circle>
+  <circle cx="600" cy="150" r="100" fill="none" stroke="url(#cyberpunkGradient)" stroke-width="1" stroke-opacity="0.5">
+    <animateTransform attributeName="transform" 
+                      attributeType="XML" 
+                      type="rotate"
+                      from="360 600 150" 
+                      to="0 600 150" 
+                      dur="25s" 
+                      repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Hologram Base Glow -->
+  <ellipse cx="600" cy="212" rx="70" ry="10" fill="url(#hologramBase)" filter="url(#glow)">
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite" />
+  </ellipse>
+  
+  <!-- Data streams -->
+  <g opacity="0.6">
+    <line x1="330" y1="60" x2="500" y2="60" stroke="#0CFFE1" stroke-width="1" stroke-dasharray="5,5">
+      <animate attributeName="x2" values="500;520;500" dur="3s" repeatCount="indefinite" />
+    </line>
+    <line x1="330" y1="70" x2="530" y2="70" stroke="#3772FF" stroke-width="1" stroke-dasharray="5,5">
+      <animate attributeName="x2" values="530;550;530" dur="4s" repeatCount="indefinite" />
+    </line>
+    <line x1="330" y1="80" x2="480" y2="80" stroke="#FF45E9" stroke-width="1" stroke-dasharray="5,5">
+      <animate attributeName="x2" values="480;500;480" dur="2s" repeatCount="indefinite" />
+    </line>
+    <line x1="330" y1="90" x2="510" y2="90" stroke="#0CFFE1" stroke-width="1" stroke-dasharray="5,5">
+      <animate attributeName="x2" values="510;530;510" dur="3.5s" repeatCount="indefinite" />
+    </line>
+    
+    <line x1="870" y1="210" x2="700" y2="210" stroke="#0CFFE1" stroke-width="1" stroke-dasharray="5,5">
+      <animate attributeName="x1" values="870;890;870" dur="3s" repeatCount="indefinite" />
+    </line>
+    <line x1="870" y1="220" x2="670" y2="220" stroke="#3772FF" stroke-width="1" stroke-dasharray="5,5">
+      <animate attributeName="x1" values="870;890;870" dur="4s" repeatCount="indefinite" />
+    </line>
+    <line x1="870" y1="230" x2="690" y2="230" stroke="#FF45E9" stroke-width="1" stroke-dasharray="5,5">
+      <animate attributeName="x1" values="870;890;870" dur="2s" repeatCount="indefinite" />
+    </line>
+    <line x1="870" y1="240" x2="730" y2="240" stroke="#0CFFE1" stroke-width="1" stroke-dasharray="5,5">
+      <animate attributeName="x1" values="870;890;870" dur="3.5s" repeatCount="indefinite" />
+    </line>
+  </g>
+  
+  <!-- Main Logo Text -->
+  <g filter="url(#neonGlow)">
+    <text x="600" y="160" font-family="Arial, sans-serif" font-size="72" font-weight="bold" text-anchor="middle" fill="#0CFFE1">NOVA<tspan fill="#FFFFFF">LINK</tspan></text>
+  </g>
+  
+  <!-- Tagline -->
+  <text x="600" y="200" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" fill="#FFFFFF" opacity="0.8">ADVANCED AI AGENT INTERFACE</text>
+  
+  <!-- Top right corner version -->
+  <g opacity="0.7">
+    <text x="1150" y="30" font-family="Courier New, monospace" font-size="14" text-anchor="end" fill="#0CFFE1">v2.1.5</text>
+  </g>
+  
+  <!-- Bottom left system info -->
+  <g opacity="0.7">
+    <text x="50" y="280" font-family="Courier New, monospace" font-size="12" fill="#3772FF">STATUS: ONLINE | AGENTS: CONNECTED | SYSTEM: READY</text>
+  </g>
+</svg>
