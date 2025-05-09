@@ -9,7 +9,8 @@ import {
   insertAgentSchema, 
   insertMessageSchema, 
   insertAlertSchema, 
-  insertCommandSchema
+  insertCommandSchema,
+  Agent
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -70,12 +71,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
             timestamp: new Date()
           });
           
-          // If the command is for the ChronoCore agent and it's awaiting input,
-          // resolve the alert and update the agent status
-          if (agentId === 1 && (
-              commandText.toLowerCase().includes('proceed') || 
-              commandText.toLowerCase().includes('reschedule')
-          )) {
+          // Get the agent to determine how to respond
+          const agent = await storage.getAgent(agentId);
+          if (!agent) {
+            console.error(`Agent with ID ${agentId} not found`);
+            return;
+          }
+          
+          // Record a message for the user command
+          await storage.createMessage({
+            agentId,
+            content: commandText,
+            type: "USER",
+            timestamp: new Date()
+          });
+          
+          // Determine appropriate response based on command and agent
+          let responseContent = "";
+          let shouldResolveAlerts = false;
+          let newStatus = agent.status;
+          
+          // Generate a response based on command keywords
+          if (commandText.toLowerCase().includes('proceed')) {
+            responseContent = `Proceeding with ${agent.name} operation as requested. I'll monitor for any conflicts.`;
+            shouldResolveAlerts = true;
+            newStatus = 'active';
+          } 
+          else if (commandText.toLowerCase().includes('reschedule')) {
+            responseContent = `Rescheduling ${agent.name} operation for tomorrow at 3AM when system usage is minimal.`;
+            shouldResolveAlerts = true;
+            newStatus = 'idle';
+          }
+          else if (commandText.toLowerCase().includes('status')) {
+            responseContent = `${agent.name} is currently ${agent.status}. Memory usage is at ${agent.memory}MB with ${agent.uptime} seconds uptime.`;
+          }
+          else if (commandText.toLowerCase().includes('stop') || commandText.toLowerCase().includes('pause')) {
+            responseContent = `Pausing ${agent.name} operations. You can resume by saying 'resume' or 'continue'.`;
+            newStatus = 'idle';
+          }
+          else if (commandText.toLowerCase().includes('resume') || commandText.toLowerCase().includes('continue')) {
+            responseContent = `Resuming ${agent.name} operations now.`;
+            newStatus = 'active';
+          }
+          else if (commandText.toLowerCase().includes('help')) {
+            responseContent = `Available commands for ${agent.name}: status, proceed, reschedule, stop, resume, help`;
+          }
+          else {
+            // Default response if no specific keywords are detected
+            responseContent = `Command received for ${agent.name}. Processing your request now.`;
+            newStatus = 'processing';
+            
+            // After a short delay, simulate completion and return to active state
+            setTimeout(async () => {
+              await storage.updateAgentStatus(agentId, 'active');
+              
+              // Create a follow-up message
+              await storage.createMessage({
+                agentId,
+                content: `${agent.name} has completed processing your request.`,
+                type: "AGENT",
+                timestamp: new Date()
+              });
+              
+              // Send a voice notification to the client
+              wss.clients.forEach(client => {
+                if (client.readyState === WebSocket.OPEN && (client as any).authenticated) {
+                  const voiceData = {
+                    type: 'voice',
+                    data: {
+                      text: `${agent.name} has completed processing your request.`,
+                      agentId
+                    }
+                  };
+                  client.send(JSON.stringify(voiceData));
+                }
+              });
+              
+              // Broadcast updated agent status
+              broadcastUpdates(wss);
+            }, 3000);
+          }
+          
+          // If alerts should be resolved, resolve them
+          if (shouldResolveAlerts) {
             // Get the agent's alerts
             const alerts = await storage.getAgentAlerts(agentId);
             
@@ -85,29 +163,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 await storage.resolveAlert(alert.id);
               }
             }
-            
-            // Update the agent status to active
-            await storage.updateAgentStatus(agentId, 'active');
-            
-            // Create a response message from the agent
-            const responseContent = commandText.toLowerCase().includes('proceed') 
-              ? "Proceeding with deployment as requested. I'll monitor for any conflicts."
-              : "Rescheduling deployment for tomorrow at 3AM when system usage is minimal.";
-            
-            await storage.createMessage({
-              agentId,
-              content: responseContent,
-              type: "AGENT",
-              timestamp: new Date()
-            });
           }
           
-          // Record a message for the user command
+          // Update the agent status if it's changed
+          if (newStatus !== agent.status) {
+            await storage.updateAgentStatus(agentId, newStatus);
+          }
+          
+          // Create a response message from the agent
           await storage.createMessage({
             agentId,
-            content: commandText,
-            type: "USER",
+            content: responseContent,
+            type: "AGENT",
             timestamp: new Date()
+          });
+          
+          // Send a voice notification to the client
+          wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN && (client as any).authenticated) {
+              const voiceData = {
+                type: 'voice',
+                data: {
+                  text: responseContent,
+                  agentId
+                }
+              };
+              client.send(JSON.stringify(voiceData));
+            }
           });
           
           // Broadcast the updated data to all connected clients
@@ -157,7 +239,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/agents', isAuthenticated, async (req, res) => {
     try {
       const agents = await storage.getAgents();
-      res.json(agents);
+      
+      // Enhance agents with dynamic activity simulation
+      const enhancedAgents = agents.map(agent => {
+        // Randomly update CPU and memory values to simulate activity
+        // This gives a more dynamic feel to the interface without needing external API
+        const randomFactor = Math.random() * 0.2 + 0.9; // 0.9 to 1.1
+        const memory = Math.round(agent.memory * randomFactor);
+        const cpu = Math.round((agent.cpu || 0) * randomFactor);
+        
+        // Every 10th request, simulate a status change for some agents
+        if (Math.random() > 0.9) {
+          // Only change status for non-stopped agents
+          if (agent.status !== 'stopped' && agent.status !== 'error') {
+            const statuses: Agent['status'][] = ['active', 'processing', 'awaiting_input', 'idle'];
+            const newStatus = statuses[Math.floor(Math.random() * statuses.length)];
+            
+            // Don't update in the database, just in the response
+            return { ...agent, memory, cpu, status: newStatus };
+          }
+        }
+        
+        return { ...agent, memory, cpu };
+      });
+      
+      res.json(enhancedAgents);
     } catch (error) {
       res.status(500).json({ message: 'Error fetching agents' });
     }
@@ -312,10 +418,23 @@ async function sendInitialData(ws: WebSocket) {
       const agentTypes = await storage.getAgentTypes();
       const alerts = await storage.getAlerts();
       
+      // Enhance agents with more dynamic information
+      const enhancedAgents = agents.map(agent => {
+        // Slightly randomize metrics to make it seem more real-time
+        const randomFactor = Math.random() * 0.2 + 0.9; // 0.9 to 1.1
+        const memory = Math.round(agent.memory * randomFactor);
+        const cpu = Math.round((agent.cpu || 0) * randomFactor);
+        
+        // Update last active timestamp to recent
+        const lastActive = new Date();
+        
+        return { ...agent, memory, cpu, lastActive };
+      });
+      
       const initialData = {
         type: 'initial',
         data: {
-          agents,
+          agents: enhancedAgents,
           agentTypes,
           alerts
         }
@@ -334,10 +453,64 @@ async function broadcastUpdates(wss: WebSocketServer) {
     const agents = await storage.getAgents();
     const alerts = await storage.getAlerts();
     
+    // Enhance agents with dynamic activity simulation, similar to the GET endpoint
+    const enhancedAgents = agents.map(agent => {
+      // Randomly update CPU and memory values to simulate activity
+      const randomFactor = Math.random() * 0.2 + 0.9; // 0.9 to 1.1
+      const memory = Math.round(agent.memory * randomFactor);
+      const cpu = Math.round((agent.cpu || 0) * randomFactor);
+      
+      // Randomly update uptime
+      const uptimeIncrement = Math.round(Math.random() * 60); // 0-60 second random increment
+      const uptime = agent.uptime + uptimeIncrement;
+      
+      // Every now and then, simulate a status change for some agents
+      if (Math.random() > 0.9) {
+        // Only change status for non-stopped agents
+        if (agent.status !== 'stopped' && agent.status !== 'error') {
+          const statuses: Agent['status'][] = ['active', 'processing', 'awaiting_input', 'idle'];
+          const newStatus = statuses[Math.floor(Math.random() * statuses.length)];
+          
+          // For processing agents, sometimes create an alert
+          if (newStatus === 'awaiting_input' && Math.random() > 0.7) {
+            // Only create alert if there are no unresolved alerts for this agent
+            const hasUnresolvedAlert = alerts.some(
+              alert => alert.agentId === agent.id && !alert.resolved
+            );
+            
+            if (!hasUnresolvedAlert) {
+              // This will only show in the current response, not persist to DB
+              const alertMessages = [
+                "Deployment conflict detected. Awaiting resolution instructions.",
+                "Task scheduler conflict found. Please advise on priority assignment.",
+                "Security exception encountered. Manual verification required.",
+                "Processing pipeline stalled. User input needed to proceed."
+              ];
+              
+              // Add a virtual alert (won't be persisted to DB)
+              const virtualAlert = {
+                id: Math.floor(Math.random() * 10000) + 1000,
+                agentId: agent.id,
+                message: alertMessages[Math.floor(Math.random() * alertMessages.length)],
+                timestamp: new Date(),
+                resolved: false
+              };
+              
+              alerts.push(virtualAlert);
+            }
+          }
+          
+          return { ...agent, memory, cpu, uptime, status: newStatus };
+        }
+      }
+      
+      return { ...agent, memory, cpu, uptime };
+    });
+    
     const updateData = {
       type: 'update',
       data: {
-        agents,
+        agents: enhancedAgents,
         alerts,
         timestamp: new Date()
       }

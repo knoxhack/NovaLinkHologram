@@ -117,24 +117,47 @@ export function createWebSocketConnection(): WebSocket | null {
   return socket;
 }
 
-// Helper to get text-to-speech functionality
-export function speak(text: string): void {
+// Helper to get text-to-speech functionality with more control
+export function speak(text: string, options: {
+  onStart?: () => void;
+  onEnd?: () => void;
+  rate?: number;
+  pitch?: number;
+  volume?: number;
+} = {}): SpeechSynthesisUtterance {
+  // Cancel any existing speech
+  window.speechSynthesis.cancel();
+  
   // Use the Web Speech API for text-to-speech
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 1.0;
-  utterance.pitch = 1.0;
-  utterance.volume = 1.0;
+  utterance.rate = options.rate || 1.0;
+  utterance.pitch = options.pitch || 1.0;
+  utterance.volume = options.volume || 1.0;
   
-  // Try to get a female voice if available
-  const voices = speechSynthesis.getVoices();
-  const femaleVoice = voices.find(voice => 
+  // Try to get a better voice if available
+  const voices = window.speechSynthesis.getVoices();
+  const preferredVoice = voices.find(voice => 
+    voice.name.toLowerCase().includes('premium') ||
+    voice.name.toLowerCase().includes('enhanced') ||
     voice.name.toLowerCase().includes('female') ||
     voice.name.toLowerCase().includes('samantha')
   );
   
-  if (femaleVoice) {
-    utterance.voice = femaleVoice;
+  if (preferredVoice) {
+    utterance.voice = preferredVoice;
   }
   
+  // Set up event listeners
+  if (options.onStart) {
+    utterance.addEventListener('start', options.onStart);
+  }
+  
+  if (options.onEnd) {
+    utterance.addEventListener('end', options.onEnd);
+  }
+  
+  // Start speaking
   window.speechSynthesis.speak(utterance);
+  
+  return utterance;
 }
