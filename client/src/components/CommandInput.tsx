@@ -94,11 +94,13 @@ export default function CommandInput({ onSubmit, onVoiceActivityChange }: Comman
     }
   };
   
-  // Handle keyboard navigation
+  // Handle keyboard navigation and autocomplete
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
+      e.preventDefault();
       handleSubmit();
     } else if (e.key === "ArrowUp") {
+      e.preventDefault();
       // Navigate up through command history
       if (commandHistory.length > 0 && historyIndex < commandHistory.length - 1) {
         const newIndex = historyIndex + 1;
@@ -106,6 +108,7 @@ export default function CommandInput({ onSubmit, onVoiceActivityChange }: Comman
         setCommand(commandHistory[newIndex]);
       }
     } else if (e.key === "ArrowDown") {
+      e.preventDefault();
       // Navigate down through command history
       if (historyIndex > 0) {
         const newIndex = historyIndex - 1;
@@ -115,6 +118,39 @@ export default function CommandInput({ onSubmit, onVoiceActivityChange }: Comman
         setHistoryIndex(-1);
         setCommand("");
       }
+    } else if (e.key === "Tab") {
+      e.preventDefault();
+      
+      // Auto-complete with common commands
+      const commonCommands = [
+        "status", "analyze", "deploy", "proceed", "reschedule", 
+        "help", "scan", "pause", "resume", "stop"
+      ];
+      
+      if (command.trim()) {
+        // Find a matching command for auto-complete
+        const matchingCommand = commonCommands.find(cmd => 
+          cmd.startsWith(command.toLowerCase().trim())
+        );
+        
+        if (matchingCommand && matchingCommand !== command.toLowerCase()) {
+          setCommand(matchingCommand);
+          // Show toast for auto-complete
+          toast({
+            title: "Auto-complete",
+            description: `Completed command: ${matchingCommand}`,
+            className: "toast-default",
+          });
+        }
+      }
+    } else if (e.key === "/" && !command.trim()) {
+      e.preventDefault();
+      // Show available commands
+      toast({
+        title: "Available Commands",
+        description: "status, analyze, deploy, proceed, reschedule, help, scan, pause, resume, stop",
+        className: "toast-default",
+      });
     }
   };
   

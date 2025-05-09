@@ -86,10 +86,70 @@ export default function Home() {
               if (agent) {
                 const alertText = `Alert from Agent ${agent.name}. ${alert.message}`;
                 setSpokenText(alertText);
-                speak(alertText);
+                
+                speak(alertText, {
+                  onStart: () => {
+                    if (hologramRef.current) {
+                      hologramRef.current.updateSpeaking(true);
+                      hologramRef.current.triggerAlert();
+                    }
+                  },
+                  onEnd: () => {
+                    if (hologramRef.current) {
+                      hologramRef.current.updateSpeaking(false);
+                    }
+                  }
+                });
               }
             }
           }
+        }
+        
+        // Handle voice response from agent via WebSocket
+        else if (data.type === 'voice') {
+          const { text, agentId } = data.data;
+          
+          // Only process voice commands related to the selected agent or general system messages
+          if (!agentId || agentId === selectedAgentId) {
+            setSpokenText(text);
+            
+            // Have the hologram speak the text and animate
+            speak(text, {
+              onStart: () => {
+                if (hologramRef.current) {
+                  hologramRef.current.updateSpeaking(true);
+                }
+              },
+              onEnd: () => {
+                if (hologramRef.current) {
+                  hologramRef.current.updateSpeaking(false);
+                }
+              }
+            });
+          }
+        }
+        
+        // Handle initial data load - show welcome message the first time
+        else if (data.type === 'initial' && !sessionStorage.getItem('novalink-welcomed')) {
+          sessionStorage.setItem('novalink-welcomed', 'true');
+          
+          // Wait a moment before speaking welcome message
+          setTimeout(() => {
+            const welcomeMessage = "NovaLink initialized. All agent systems online. How may I assist you today?";
+            speak(welcomeMessage, {
+              onStart: () => {
+                if (hologramRef.current) {
+                  hologramRef.current.updateSpeaking(true);
+                }
+                setSpokenText(welcomeMessage);
+              },
+              onEnd: () => {
+                if (hologramRef.current) {
+                  hologramRef.current.updateSpeaking(false);
+                }
+              }
+            });
+          }, 1500);
         }
       } catch (error) {
         console.error('Error parsing WebSocket message:', error);
